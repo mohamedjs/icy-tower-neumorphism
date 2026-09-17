@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Icy Tower - Neumorphism Edition</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>❄️</text></svg>">
 </head>
 <body>
-    <main class="game-wrapper">
+    <main class="game-wrapper" tabindex="0">
         <!-- Neumorphic Header -->
         <header class="neu-header">
             <div class="brand">
@@ -85,15 +85,24 @@
         <!-- Touch Controls (Mobile Friendly) -->
         <nav class="touch-controls" aria-label="Touch Controls">
             <div class="d-pad">
-                <button id="btnLeft" class="touch-btn" aria-label="Move Left">◀</button>
-                <button id="btnRight" class="touch-btn" aria-label="Move Right">▶</button>
+                <button id="btnLeft" class="touch-btn" aria-label="Move Left">
+                    <span class="btn-icon">◀</span>
+                    <span class="btn-label">LEFT</span>
+                </button>
+                <button id="btnRight" class="touch-btn" aria-label="Move Right">
+                    <span class="btn-icon">▶</span>
+                    <span class="btn-label">RIGHT</span>
+                </button>
             </div>
-            <button id="btnJump" class="touch-btn jump-btn" aria-label="Jump">JUMP</button>
+            <button id="btnJump" class="touch-btn jump-btn" aria-label="Jump Up">
+                <span class="btn-icon">▲</span>
+                <span class="btn-label">UP / JUMP</span>
+            </button>
         </nav>
 
-        <!-- Keyboard Controls Hint -->
+        <!-- Controls Hint -->
         <footer class="hint-pill">
-            ⌨️ <strong>Arrow Keys</strong> or <strong>A/D</strong> to Run &bull; <strong>Space / Up</strong> to Jump &bull; Bounce on walls for Super Jumps!
+            ⌨️ <strong>Arrow Keys / A-D</strong> to Run &bull; <strong>Up / Space</strong> to Jump &bull; 📱 Touch Left, Right & Up!
         </footer>
     </main>
 

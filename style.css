@@ -32,6 +32,7 @@ body {
     min-height: 100vh;
     padding: 12px;
     overflow-x: hidden;
+    touch-action: manipulation;
 }
 
 /* Master Game Container */
@@ -41,7 +42,8 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
+    outline: none;
 }
 
 /* Neumorphic Top Navigation / HUD */
@@ -95,6 +97,7 @@ body {
     cursor: pointer;
     box-shadow: 5px 5px 10px var(--neu-shadow-dark), -5px -5px 10px var(--neu-shadow-light);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    touch-action: manipulation;
 }
 
 .neu-btn-icon:hover {
@@ -160,6 +163,7 @@ body {
     background: #edf2f8;
     box-shadow: inset 6px 6px 12px var(--neu-shadow-dark), inset -6px -6px 12px var(--neu-shadow-light);
     line-height: 0;
+    touch-action: none;
 }
 
 #gameCanvas {
@@ -167,6 +171,7 @@ body {
     height: auto;
     aspect-ratio: 480 / 700;
     display: block;
+    touch-action: none;
 }
 
 /* Floating Combo Banner */
@@ -313,6 +318,7 @@ body {
     cursor: pointer;
     box-shadow: 6px 6px 14px var(--neu-shadow-dark), -6px -6px 14px var(--neu-shadow-light);
     transition: all 0.2s ease;
+    touch-action: manipulation;
 }
 
 .neu-btn-primary:hover {
@@ -331,30 +337,42 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 6px 10px;
+    padding: 4px 8px;
 }
 
 .d-pad {
     display: flex;
-    gap: 14px;
+    gap: 12px;
 }
 
 .touch-btn {
-    width: 66px;
-    height: 66px;
-    border-radius: 20px;
+    width: 72px;
+    height: 72px;
+    border-radius: 22px;
     border: none;
     background: var(--neu-surface);
-    font-size: 22px;
-    font-weight: 800;
     color: var(--text-main);
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     cursor: pointer;
     box-shadow: 6px 6px 14px var(--neu-shadow-dark), -6px -6px 14px var(--neu-shadow-light);
-    touch-action: manipulation;
-    transition: all 0.15s ease;
+    touch-action: none;
+    transition: all 0.12s ease;
+}
+
+.btn-icon {
+    font-size: 22px;
+    line-height: 1;
+}
+
+.btn-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    margin-top: 3px;
+    color: var(--text-muted);
 }
 
 .touch-btn:active, .touch-btn.active {
@@ -363,20 +381,30 @@ body {
     color: var(--primary);
 }
 
-.touch-btn.jump-btn {
-    width: 86px;
-    height: 66px;
-    border-radius: 20px;
-    font-size: 15px;
-    font-weight: 900;
+.touch-btn:active .btn-label, .touch-btn.active .btn-label {
     color: var(--primary);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+}
+
+.touch-btn.jump-btn {
+    width: 104px;
+    height: 72px;
+    border-radius: 22px;
+    color: var(--primary);
+}
+
+.touch-btn.jump-btn .btn-icon {
+    font-size: 24px;
+    color: var(--primary);
+}
+
+.touch-btn.jump-btn .btn-label {
+    color: var(--primary);
+    font-weight: 900;
 }
 
 /* Hint footer */
 .hint-pill {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     color: var(--text-muted);
     text-align: center;
@@ -384,6 +412,7 @@ body {
     padding: 8px 16px;
     border-radius: 20px;
     box-shadow: inset 3px 3px 6px var(--neu-shadow-dark), inset -3px -3px 6px var(--neu-shadow-light);
+    width: 100%;
 }
 
 .hidden {
@@ -392,21 +421,29 @@ body {
 
 @media (max-width: 480px) {
     body {
-        padding: 6px;
+        padding: 4px;
     }
     .game-wrapper {
-        gap: 10px;
+        gap: 8px;
     }
     .viewport-frame {
         padding: 6px;
         border-radius: 20px;
     }
     .touch-btn {
-        width: 58px;
-        height: 58px;
+        width: 62px;
+        height: 62px;
+        border-radius: 18px;
+    }
+    .btn-icon {
+        font-size: 20px;
+    }
+    .btn-label {
+        font-size: 9px;
     }
     .touch-btn.jump-btn {
-        width: 76px;
-        height: 58px;
+        width: 90px;
+        height: 62px;
+        border-radius: 18px;
     }
 }

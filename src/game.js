@@ -1,9 +1,9 @@
 /**
  * Icy Tower - Neumorphism Edition
- * High-performance, robust game engine with zero external dependencies.
+ * High-performance, robust game engine with responsive keyboard and multi-touch controls.
  */
 (function () {
-    // Utility: Safe roundRect that works on ALL browsers without exception
+    // Cross-browser safe rounded rect helper
     function drawRoundRect(ctx, x, y, width, height, radius) {
         if (typeof ctx.roundRect === 'function') {
             ctx.beginPath();
@@ -18,7 +18,7 @@
         ctx.arcTo(x + width, y, x + width, y + height, r);
         ctx.arcTo(x + width, y + height, x, y + height, r);
         ctx.arcTo(x, y + height, x, y, r);
-        ctx.arcTo(x, y, x + width, y, r);
+        ctx.arcTo(x, y + width, y, r);
         ctx.closePath();
     }
 
@@ -42,7 +42,7 @@
     const pauseBtn = document.getElementById('pauseBtn');
     const soundBtn = document.getElementById('soundBtn');
 
-    // Virtual dimensions for crisp rendering
+    // Virtual dimensions
     const V_WIDTH = 480;
     const V_HEIGHT = 700;
     canvas.width = V_WIDTH;
@@ -56,12 +56,16 @@
     let highScore = parseInt(localStorage.getItem('icy_tower_hs_v2') || '0', 10);
     bestVal.textContent = highScore;
 
-    // Controls
+    // Responsive Controls State
     const keys = {
         left: false,
         right: false,
         jump: false
     };
+
+    // Jump buffer and coyote time for crisp game feel
+    let jumpBuffer = 0;
+    let coyoteTimer = 0;
 
     // Camera & Screen Shake
     let cameraY = 0;
@@ -85,18 +89,17 @@
         h: 46,
         vx: 0,
         vy: 0,
-        ax: 0.72,
-        friction: 0.87,
+        ax: 0.74,
+        friction: 0.86,
         maxSpeed: 8.8,
         turboSpeed: 12.5,
         runTimer: 0,
         gravity: 0.60,
-        jumpStrength: -13.8,
+        jumpStrength: -14.0,
         onGround: false,
         facing: 1, // 1 for right, -1 for left
         squashX: 1,
         squashY: 1,
-        rotation: 0,
         isSpinning: false,
         spinAngle: 0,
         walkFrame: 0,
@@ -112,7 +115,6 @@
             this.facing = 1;
             this.squashX = 1;
             this.squashY = 1;
-            this.rotation = 0;
             this.isSpinning = false;
             this.spinAngle = 0;
             this.walkFrame = 0;
@@ -149,12 +151,11 @@
         const y = nextPlatformY;
         nextPlatformY -= PLATFORM_SPACING;
 
-        // Platform width narrows gracefully as player reaches higher floors
+        // Platform width narrows gracefully as player climbs higher
         const minW = Math.max(70, 160 - Math.floor(floor / 12) * 6);
         const maxW = Math.max(90, 210 - Math.floor(floor / 12) * 6);
         const w = minW + Math.random() * (maxW - minW);
 
-        // Position within tower borders
         const minX = 26;
         const maxX = V_WIDTH - w - 26;
         const x = minX + Math.random() * (maxX - minX);
@@ -214,6 +215,8 @@
         gameStartTime = Date.now();
         lastLandedFloor = 0;
         screenShake = 0;
+        jumpBuffer = 0;
+        coyoteTimer = 0;
         particles = [];
         nextPlatformFloor = 1;
         nextPlatformY = 530;
@@ -233,6 +236,15 @@
         if (screenShake > 0) screenShake *= 0.88;
         if (screenShake < 0.2) screenShake = 0;
 
+        // Jump buffer and coyote timers
+        if (jumpBuffer > 0) jumpBuffer--;
+
+        if (player.onGround) {
+            coyoteTimer = 6; // 6 frames grace (~100ms)
+        } else if (coyoteTimer > 0) {
+            coyoteTimer--;
+        }
+
         // Dynamic rising screen clock
         const elapsedSec = (Date.now() - gameStartTime) / 1000;
         if (!cameraStarted && (highestFloor >= 5 || elapsedSec > 4)) {
@@ -245,17 +257,17 @@
         }
 
         // Horizontal Movement & Momentum
-        if (keys.left) {
+        if (keys.left && !keys.right) {
             player.facing = -1;
             player.runTimer++;
-            const topSpd = player.runTimer > 20 ? player.turboSpeed : player.maxSpeed;
+            const topSpd = player.runTimer > 18 ? player.turboSpeed : player.maxSpeed;
             player.vx -= player.ax;
             if (player.vx < -topSpd) player.vx = -topSpd;
             player.walkFrame += 0.25;
-        } else if (keys.right) {
+        } else if (keys.right && !keys.left) {
             player.facing = 1;
             player.runTimer++;
-            const topSpd = player.runTimer > 20 ? player.turboSpeed : player.maxSpeed;
+            const topSpd = player.runTimer > 18 ? player.turboSpeed : player.maxSpeed;
             player.vx += player.ax;
             if (player.vx > topSpd) player.vx = topSpd;
             player.walkFrame += 0.25;
@@ -266,14 +278,20 @@
             player.walkFrame = 0;
         }
 
-        // Jump Physics
-        if (keys.jump && player.onGround) {
+        // Jump Execution (Jump Buffering + Coyote Time for responsive feel)
+        const wantsJump = keys.jump || jumpBuffer > 0;
+        const canJump = (player.onGround || coyoteTimer > 0) && player.vy >= -2.0;
+
+        if (wantsJump && canJump) {
+            jumpBuffer = 0;
+            coyoteTimer = 0;
+            player.onGround = false;
+
             const speedRatio = Math.abs(player.vx) / player.maxSpeed;
-            const extraBoost = speedRatio > 0.75 ? speedRatio * 5.2 : 0;
+            const extraBoost = speedRatio > 0.70 ? speedRatio * 5.4 : 0;
             const totalJump = player.jumpStrength - extraBoost;
 
             player.vy = totalJump;
-            player.onGround = false;
             player.squashX = 0.7;
             player.squashY = 1.35;
 
@@ -309,14 +327,14 @@
         player.squashX += (1 - player.squashX) * 0.16;
         player.squashY += (1 - player.squashY) * 0.16;
 
-        // Wall Bounce (Classic Icy Tower Signature Move!)
+        // Wall Bounce (Classic Icy Tower signature mechanic)
         if (player.wallCooldown > 0) player.wallCooldown--;
 
         if (player.x <= 16) {
             player.x = 16;
-            if (!player.onGround && player.wallCooldown === 0 && player.vx < -1.2) {
-                player.vx = Math.abs(player.vx) * 1.12;
-                player.vy = Math.min(player.vy, -8);
+            if (!player.onGround && player.wallCooldown === 0 && player.vx < -1.0) {
+                player.vx = Math.abs(player.vx) * 1.14;
+                player.vy = Math.min(player.vy, -8.5);
                 player.facing = 1;
                 player.wallCooldown = 10;
                 screenShake = 4;
@@ -327,9 +345,9 @@
             }
         } else if (player.x + player.w >= V_WIDTH - 16) {
             player.x = V_WIDTH - 16 - player.w;
-            if (!player.onGround && player.wallCooldown === 0 && player.vx > 1.2) {
-                player.vx = -Math.abs(player.vx) * 1.12;
-                player.vy = Math.min(player.vy, -8);
+            if (!player.onGround && player.wallCooldown === 0 && player.vx > 1.0) {
+                player.vx = -Math.abs(player.vx) * 1.14;
+                player.vy = Math.min(player.vy, -8.5);
                 player.facing = -1;
                 player.wallCooldown = 10;
                 screenShake = 4;
@@ -340,7 +358,7 @@
             }
         }
 
-        // Platform Collisions (Landing when moving downwards)
+        // Platform Collisions (Landing when falling downwards)
         player.onGround = false;
         if (player.vy > 0) {
             for (let i = 0; i < platforms.length; i++) {
@@ -348,7 +366,7 @@
                 const prevY = player.y - player.vy;
 
                 if (player.x + player.w > p.x && player.x < p.x + p.w) {
-                    if (prevY + player.h <= p.y + 6 && player.y + player.h >= p.y) {
+                    if (prevY + player.h <= p.y + 7 && player.y + player.h >= p.y) {
                         player.y = p.y - player.h;
                         player.vy = 0;
                         player.onGround = true;
@@ -371,7 +389,7 @@
                             }
                         }
 
-                        // Check Combo: Leap 2 or more floors
+                        // Combo check: Leap 2 or more floors in single jump!
                         const floorJumped = landedFloor - lastLandedFloor;
                         if (floorJumped >= 2 && lastLandedFloor > 0) {
                             let title = 'Good!';
@@ -531,7 +549,7 @@
             ctx.shadowOffsetX = 0;
             ctx.shadowOffsetY = 0;
 
-            // Frosted Snow Cap on Top Edge (Neumorphic highlight)
+            // Frosted Snow Cap on Top Edge
             ctx.beginPath();
             ctx.moveTo(p.x + r, p.y + 1.5);
             ctx.lineTo(p.x + p.w - r, p.y + 1.5);
@@ -651,76 +669,204 @@
         requestAnimationFrame(gameLoop);
     }
 
-    // Keyboard Controls
-    window.addEventListener('keydown', (e) => {
+    // ==========================================
+    // KEYBOARD CONTROLS (Desktop & Laptop)
+    // ==========================================
+    function onKeyDown(e) {
         window.soundEngine.ensureContext();
+
+        // Auto-start on any key
         if (state === 'idle') {
             startGame();
+        } else if (state === 'gameover') {
+            if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowUp' || e.code === 'Space' || e.code === 'Enter') {
+                startGame();
+                e.preventDefault();
+                return;
+            }
         }
-        if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
+
+        const k = e.key ? e.key.toLowerCase() : '';
+        const c = e.code || '';
+
+        // Left Movement: ArrowLeft or A
+        if (c === 'ArrowLeft' || k === 'arrowleft' || c === 'KeyA' || k === 'a') {
             keys.left = true;
             e.preventDefault();
-        } else if (e.code === 'ArrowRight' || e.code === 'KeyD') {
+        }
+        // Right Movement: ArrowRight or D
+        else if (c === 'ArrowRight' || k === 'arrowright' || c === 'KeyD' || k === 'd') {
             keys.right = true;
             e.preventDefault();
-        } else if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
+        }
+        // Up / Jump: ArrowUp, Space, or W
+        else if (c === 'ArrowUp' || k === 'arrowup' || c === 'Space' || k === ' ' || c === 'KeyW' || k === 'w') {
             keys.jump = true;
+            jumpBuffer = 10; // 10 frames buffer (~160ms)
             e.preventDefault();
         }
+    }
+
+    function onKeyUp(e) {
+        const k = e.key ? e.key.toLowerCase() : '';
+        const c = e.code || '';
+
+        if (c === 'ArrowLeft' || k === 'arrowleft' || c === 'KeyA' || k === 'a') {
+            keys.left = false;
+        } else if (c === 'ArrowRight' || k === 'arrowright' || c === 'KeyD' || k === 'd') {
+            keys.right = false;
+        } else if (c === 'ArrowUp' || k === 'arrowup' || c === 'Space' || k === ' ' || c === 'KeyW' || k === 'w') {
+            keys.jump = false;
+        }
+    }
+
+    window.addEventListener('keydown', onKeyDown, { passive: false });
+    window.addEventListener('keyup', onKeyUp, { passive: false });
+
+    // Release all keys if window loses focus
+    window.addEventListener('blur', () => {
+        keys.left = false;
+        keys.right = false;
+        keys.jump = false;
     });
 
-    window.addEventListener('keyup', (e) => {
-        if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = false;
-        if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = false;
-        if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') keys.jump = false;
-    });
-
-    // Multi-touch tracking for seamless mobile play
+    // ==========================================
+    // TOUCH & POINTER CONTROLS (Mobile & Tablet)
+    // ==========================================
     const btnLeft = document.getElementById('btnLeft');
     const btnRight = document.getElementById('btnRight');
     const btnJump = document.getElementById('btnJump');
 
-    const activeTouches = {};
-
-    function handleTouchStart(e, keyName, el) {
-        e.preventDefault();
-        window.soundEngine.ensureContext();
-        if (state === 'idle') startGame();
-        keys[keyName] = true;
-        el.classList.add('active');
-    }
-
-    function handleTouchEnd(e, keyName, el) {
-        e.preventDefault();
-        keys[keyName] = false;
-        el.classList.remove('active');
-    }
-
-    function bindTouch(el, keyName) {
+    function attachButtonControls(el, keyName) {
         if (!el) return;
-        el.addEventListener('touchstart', (e) => handleTouchStart(e, keyName, el), { passive: false });
-        el.addEventListener('touchend', (e) => handleTouchEnd(e, keyName, el), { passive: false });
-        el.addEventListener('touchcancel', (e) => handleTouchEnd(e, keyName, el), { passive: false });
 
-        el.addEventListener('mousedown', (e) => {
+        // Pointer Events (Multi-touch robust tracking)
+        el.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            window.soundEngine.ensureContext();
+            if (state === 'idle') startGame();
+            try { el.setPointerCapture(e.pointerId); } catch (err) {}
+
+            keys[keyName] = true;
+            if (keyName === 'jump') jumpBuffer = 12;
+            el.classList.add('active');
+        }, { passive: false });
+
+        el.addEventListener('pointerup', (e) => {
+            e.preventDefault();
+            try { el.releasePointerCapture(e.pointerId); } catch (err) {}
+            keys[keyName] = false;
+            el.classList.remove('active');
+        }, { passive: false });
+
+        el.addEventListener('pointercancel', (e) => {
+            try { el.releasePointerCapture(e.pointerId); } catch (err) {}
+            keys[keyName] = false;
+            el.classList.remove('active');
+        }, { passive: false });
+
+        // Touch Fallback
+        el.addEventListener('touchstart', (e) => {
+            e.preventDefault();
             window.soundEngine.ensureContext();
             if (state === 'idle') startGame();
             keys[keyName] = true;
+            if (keyName === 'jump') jumpBuffer = 12;
             el.classList.add('active');
-        });
-        el.addEventListener('mouseup', () => {
+        }, { passive: false });
+
+        el.addEventListener('touchend', (e) => {
+            e.preventDefault();
             keys[keyName] = false;
             el.classList.remove('active');
-        });
-        el.addEventListener('mouseleave', () => {
-            keys[keyName] = false;
-            el.classList.remove('active');
-        });
+        }, { passive: false });
     }
 
-    bindTouch(btnLeft, 'left');
-    bindTouch(btnRight, 'right');
-    bindTouch(btnJump, 'jump');
+    attachButtonControls(btnLeft, 'left');
+    attachButtonControls(btnRight, 'right');
+    attachButtonControls(btnJump, 'jump');
+
+    // Canvas Direct Touch / Swipe Area (Touch Left, Touch Right, Swipe Up for Jump)
+    let touchStartY = 0;
+    let canvasTouchActive = false;
+
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        window.soundEngine.ensureContext();
+        if (state === 'idle') {
+            startGame();
+            return;
+        }
+
+        const rect = canvas.getBoundingClientRect();
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            const t = e.changedTouches[i];
+            const relativeX = (t.clientX - rect.left) / rect.width;
+            const relativeY = (t.clientY - rect.top) / rect.height;
+            touchStartY = t.clientY;
+
+            // Touch left half -> move left, touch right half -> move right
+            if (relativeX < 0.35) {
+                keys.left = true;
+                keys.right = false;
+            } else if (relativeX > 0.65) {
+                keys.right = true;
+                keys.left = false;
+            }
+
+            // Tap top portion -> jump up
+            if (relativeY < 0.45) {
+                keys.jump = true;
+                jumpBuffer = 12;
+            }
+        }
+        canvasTouchActive = true;
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            const t = e.changedTouches[i];
+            const relativeX = (t.clientX - rect.left) / rect.width;
+            const deltaY = t.clientY - touchStartY;
+
+            // Swipe Up -> trigger jump
+            if (deltaY < -22) {
+                keys.jump = true;
+                jumpBuffer = 12;
+            }
+
+            if (relativeX < 0.4) {
+                keys.left = true;
+                keys.right = false;
+            } else if (relativeX > 0.6) {
+                keys.right = true;
+                keys.left = false;
+            } else {
+                keys.left = false;
+                keys.right = false;
+            }
+        }
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        // If no touches remain on canvas, release keys
+        if (e.touches.length === 0) {
+            keys.left = false;
+            keys.right = false;
+            keys.jump = false;
+            canvasTouchActive = false;
+        }
+    }, { passive: false });
+
+    canvas.addEventListener('touchcancel', () => {
+        keys.left = false;
+        keys.right = false;
+        keys.jump = false;
+        canvasTouchActive = false;
+    });
 
     // UI Buttons
     if (startBtn) {
