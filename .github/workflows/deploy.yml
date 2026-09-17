@@ -1,0 +1,25 @@
+name: Deploy Icy Tower to Netlify
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Deploy to Netlify
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN || 'nfp_EXWsJtG3BxYhXNu4PqzfZMEhNMUd4P2qdf9e' }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID || '4a0c5cfe-f2e0-496a-85f8-ab47c2b61fae' }}
+        run: |
+          npx netlify-cli deploy --prod --dir=. --auth="$NETLIFY_AUTH_TOKEN" --site="$NETLIFY_SITE_ID"

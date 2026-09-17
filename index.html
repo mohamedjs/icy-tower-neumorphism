@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Icy Tower - Neumorphism Edition</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>❄️</text></svg>">
+</head>
+<body>
+    <main class="game-wrapper">
+        <!-- Neumorphic Header -->
+        <header class="neu-header">
+            <div class="brand">
+                <span class="brand-icon">❄️</span>
+                <h1 class="brand-title">ICY TOWER</h1>
+            </div>
+            <div class="header-actions">
+                <button id="soundBtn" class="neu-btn-icon" title="Toggle Sound" aria-label="Toggle Sound">🔊</button>
+                <button id="pauseBtn" class="neu-btn-icon" title="Pause Game" aria-label="Pause Game">⏸</button>
+            </div>
+        </header>
+
+        <!-- Neumorphic Stats Bar -->
+        <section class="neu-scoreboard" aria-label="Game Scores">
+            <div class="score-pill">
+                <div class="score-label">Floor</div>
+                <div id="floorVal" class="score-num">0</div>
+            </div>
+            <div class="score-pill">
+                <div class="score-label">Score</div>
+                <div id="scoreVal" class="score-num highlight">0</div>
+            </div>
+            <div class="score-pill">
+                <div class="score-label">Best</div>
+                <div id="bestVal" class="score-num">0</div>
+            </div>
+        </section>
+
+        <!-- Game Frame Viewport -->
+        <section class="viewport-frame">
+            <div class="canvas-well">
+                <canvas id="gameCanvas"></canvas>
+
+                <!-- Start Screen Overlay -->
+                <div id="startOverlay" class="modal-overlay">
+                    <div class="modal-card">
+                        <div class="hero-badge">❄️</div>
+                        <h2 class="modal-title">ICY TOWER</h2>
+                        <p class="modal-desc">Climb as high as you can! Run fast to super jump and bounce off walls to leap multiple floors.</p>
+                        <button id="startBtn" class="neu-btn-primary">START GAME</button>
+                    </div>
+                </div>
+
+                <!-- Dynamic Combo Banner -->
+                <div id="comboBanner" class="combo-banner hidden" role="status">
+                    <div id="comboText" class="combo-text">Sweet! +3</div>
+                    <div id="comboScore" class="combo-score">+162 PTS</div>
+                </div>
+
+                <!-- Neumorphic Game Over Modal -->
+                <div id="gameOverModal" class="modal-overlay hidden">
+                    <div class="modal-card">
+                        <h2 class="modal-title gameover">GAME OVER</h2>
+                        <div class="modal-stats">
+                            <div class="stat-row">
+                                <span>Highest Floor</span>
+                                <span id="finalFloor">0</span>
+                            </div>
+                            <div class="stat-row">
+                                <span>Score</span>
+                                <span id="finalScore">0</span>
+                            </div>
+                            <div class="stat-row">
+                                <span>All-Time Best</span>
+                                <span id="finalBest">0</span>
+                            </div>
+                        </div>
+                        <button id="restartBtn" class="neu-btn-primary">PLAY AGAIN</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Touch Controls (Mobile Friendly) -->
+        <nav class="touch-controls" aria-label="Touch Controls">
+            <div class="d-pad">
+                <button id="btnLeft" class="touch-btn" aria-label="Move Left">◀</button>
+                <button id="btnRight" class="touch-btn" aria-label="Move Right">▶</button>
+            </div>
+            <button id="btnJump" class="touch-btn jump-btn" aria-label="Jump">JUMP</button>
+        </nav>
+
+        <!-- Keyboard Controls Hint -->
+        <footer class="hint-pill">
+            ⌨️ <strong>Arrow Keys</strong> or <strong>A/D</strong> to Run &bull; <strong>Space / Up</strong> to Jump &bull; Bounce on walls for Super Jumps!
+        </footer>
+    </main>
+
+    <!-- Game Scripts -->
+    <script src="src/audio.js"></script>
+    <script src="src/game.js"></script>
+</body>
+</html>
